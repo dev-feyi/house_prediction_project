@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealEstate AI | Value Estimator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dashboard-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            max-width: 1000px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Left Side: Form */
+        .form-section {
+            padding: 40px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-area { margin-bottom: 32px; }
+        .header-area h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+        .header-area p { color: var(--text-dim); font-size: 14px; }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .full-width { grid-column: span 2; }
+
+        label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            color: var(--text-dim);
+        }
+
+        input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-predict {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-predict:hover { background: var(--primary-hover); }
+
+        /* Right Side: Results */
+        .display-section {
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .output-container {
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .price-tag {
+            font-size: 42px;
+            font-weight: 700;
+            color: #818cf8;
+            margin: 15px 0;
+        }
+
+        .status-box {
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-msg { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+        /* Loader Animation */
+        .loader {
+            display: none;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        @media (max-width: 768px) {
+            .dashboard-card { grid-template-columns: 1fr; }
+            .form-section { border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+            .input-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-card">
+        <section class="form-section">
+            <div class="header-area">
+                <h1>Property Intelligence</h1>
+                <p>Advanced valuation based on market variables.</p>
+            </div>
+
+            <form id="valuationForm">
+                <div class="input-grid">
+                    <div class="input-group full-width">
+                        <label>Living Area (Sq Ft)</label>
+                        <input type="number" id="sqft" required min="500" max="10000" value="2200">
+                    </div>
+                    <div class="input-group">
+                        <label>Bedrooms</label>
+                        <input type="number" id="beds" required min="1" max="10" value="3">
+                    </div>
+                    <div class="input-group">
+                        <label>Bathrooms</label>
+                        <input type="number" id="baths" required min="1" max="8" step="0.5" value="2">
+                    </div>
+                    <div class="input-group">
+                        <label>Property Age</label>
+                        <input type="number" id="age" required min="0" max="100" value="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Garage Size</label>
+                        <input type="number" id="garage" required min="0" max="4" value="2">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Location Quality (1-10)</label>
+                        <input type="number" id="location" required min="1" max="10" value="8">
+                    </div>
+                </div>
+                <button type="submit" class="btn-predict">Analyze Market Value</button>
+            </form>
+        </section>
+
+        <section class="display-section" id="rightPanel">
+            <div id="placeholderText">
+                <p style="color: var(--text-dim)">Adjust parameters and run analysis to see the estimated valuation here.</p>
+            </div>
+
+            <div class="loader" id="loader"></div>
+
+            <div class="output-container" id="outputArea">
+                <p style="text-transform: uppercase; font-size: 11px; letter-spacing: 2px;">Estimated Valuation</p>
+                <div class="price-tag" id="finalPrice">$0.00</div>
+                <p style="color: var(--text-dim); font-size: 12px;">Based on current model data.</p>
+            </div>
+
+            <div class="status-box error-msg" id="errorBox"></div>
+        </section>
+    </div>
+
+    <script>
+        const form = document.getElementById('valuationForm');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // UI State management
+            const elements = {
+                placeholder: document.getElementById('placeholderText'),
+                loader: document.getElementById('loader'),
+                output: document.getElementById('outputArea'),
+                error: document.getElementById('errorBox'),
+                price: document.getElementById('finalPrice')
+            };
+
+            elements.placeholder.style.display = 'none';
+            elements.output.style.display = 'none';
+            elements.error.style.display = 'none';
+            elements.loader.style.display = 'block';
+
+            const payload = {
+                square_feet: document.getElementById('sqft').value,
+                bedrooms: document.getElementById('beds').value,
+                bathrooms: document.getElementById('baths').value,
+                age_years: document.getElementById('age').value,
+                garage_spaces: document.getElementById('garage').value,
+                location_score: document.getElementById('location').value
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                elements.loader.style.display = 'none';
+
+                if (result.success) {
+                    elements.price.innerText = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        maximumFractionDigits: 0
+                    }).format(result.predicted_price);
+                    
+                    elements.output.style.display = 'block';
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (err) {
+                elements.loader.style.display = 'none';
+                elements.error.innerText = err.message || "Connection failed.";
+                elements.error.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
